@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ROI/ROV/ROT: A Framework for Measuring What Matters</title>
+  <meta name="description" content="A reflection tool for evaluating a project or decision through three lenses: Return on Investment, Return on Value, and Return on Technology.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <p class="eyebrow">A UX and content strategy framework</p>
+      <h1>ROI / ROV / ROT</h1>
+      <p class="subtitle">A framework for measuring what matters.</p>
+    </div>
+  </header>
+
+  <nav class="wrap progress" id="progress" aria-label="Progress" hidden>
+    <ol id="progress-list"></ol>
+  </nav>
+
+  <main class="wrap" id="main" tabindex="-1">
+
+    <!-- Intro -->
+    <section class="step" id="step-intro" data-step="intro" aria-labelledby="h-intro">
+      <h2 id="h-intro" tabindex="-1">Three lenses. One honest picture.</h2>
+      <p class="lede">A project can succeed on paper and still fail the people using it, or delight users and still be impossible to build. This tool walks through a project or decision using three lenses, then shows where they agree and where they pull against each other.</p>
+
+      <div class="lens-grid">
+        <article class="lens-card lens-roi">
+          <h3><span class="abbr">ROI</span> Return on Investment</h3>
+          <p class="case">The business case</p>
+          <p>Did we move the right metrics? Completion rates, engagement, error reduction, time on task.</p>
+        </article>
+        <article class="lens-card lens-rov">
+          <h3><span class="abbr">ROV</span> Return on Value</h3>
+          <p class="case">The user experience case</p>
+          <p>Did it feel better for the person using it? Less friction, less anxiety, content that felt made for them.</p>
+        </article>
+        <article class="lens-card lens-rot">
+          <h3><span class="abbr">ROT</span> Return on Technology</h3>
+          <p class="case">The feasibility case</p>
+          <p>What was possible within real constraints? Compliance, accessibility, platform limits, legacy architecture.</p>
+        </article>
+      </div>
+
+      <p class="callout"><strong>The tension is the point.</strong> A high score on one lens isn't the goal. The gaps between lenses are where the most useful conversations start.</p>
+
+      <p>It takes about five minutes. Nothing is saved or sent anywhere; everything stays in this browser tab.</p>
+      <div class="actions">
+        <button class="btn primary" type="button" data-action="start">Start evaluating</button>
+      </div>
+    </section>
+
+    <!-- Setup -->
+    <section class="step" id="step-setup" data-step="setup" aria-labelledby="h-setup" hidden>
+      <h2 id="h-setup" tabindex="-1">What are you evaluating?</h2>
+      <p class="lede">Name the project or decision. Keep it specific enough that you can answer honestly.</p>
+      <form id="setup-form" novalidate>
+        <div class="field">
+          <label for="project-name">Project or decision</label>
+          <input id="project-name" name="name" type="text" maxlength="120" autocomplete="off" placeholder="e.g., Redesign of the benefits enrollment flow" aria-describedby="name-error" required>
+          <p class="error" id="name-error" role="alert" hidden>Please name what you're evaluating.</p>
+        </div>
+        <div class="field">
+          <label for="project-desc">What was it, in a sentence? <span class="optional">(optional)</span></label>
+          <textarea id="project-desc" name="desc" rows="3" maxlength="400" placeholder="e.g., Replaced a 9-step form with a guided 4-step flow and rewrote all error messages."></textarea>
+        </div>
+        <div class="actions">
+          <button class="btn" type="button" data-action="back">Back</button>
+          <button class="btn primary" type="submit">Continue to ROI</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Lens steps are rendered by app.js -->
+    <div id="lens-steps"></div>
+
+    <!-- Results -->
+    <section class="step" id="step-results" data-step="results" aria-labelledby="h-results" hidden>
+      <p class="eyebrow" id="results-eyebrow">Results</p>
+      <h2 id="h-results" tabindex="-1">Results</h2>
+      <p class="lede" id="results-desc"></p>
+
+      <div class="panel">
+        <h3 class="panel-title">The three lenses</h3>
+        <div id="bars" class="bars"></div>
+        <p class="fine">Each lens is four questions rated 1–5, so every lens is scored out of 20.</p>
+      </div>
+
+      <div class="panel">
+        <h3 class="panel-title">Shape of the balance</h3>
+        <div class="triangle-wrap" id="triangle"></div>
+        <p class="fine">The dashed outline is a perfectly balanced shape at my average score. The further the filled shape pulls away from it, the more one lens is being traded against the others.</p>
+      </div>
+
+      <div class="panel">
+        <h3 class="panel-title">Where the lenses align and where they pull apart</h3>
+        <div id="tensions"></div>
+      </div>
+
+      <div class="panel">
+        <h3 class="panel-title">My notes</h3>
+        <div id="notes"></div>
+      </div>
+
+      <div class="actions no-print">
+        <button class="btn" type="button" data-action="back">Edit answers</button>
+        <button class="btn" type="button" data-action="print">Print or save as PDF</button>
+        <button class="btn primary" type="button" data-action="restart">Start over</button>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>ROI/ROV/ROT is a framework for UX and content strategy work. This tool runs entirely in your browser and stores nothing.</p>
+    </div>
+  </footer>
+
+  <div class="sr-only" id="live" aria-live="polite" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
