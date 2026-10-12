@@ -71,6 +71,18 @@ h2 { font-size: clamp(1.5rem, 4.5vw, 1.95rem); line-height: 1.2; margin: 0 0 12p
 h3 { margin: 0 0 6px; font-size: 1.1rem; }
 .lede { font-size: 1.1rem; color: var(--ink-soft); margin: 0 0 24px; }
 
+/* About this prototype */
+.about {
+  max-width: 62ch; margin: 0 0 32px; padding: 4px 0 4px 18px;
+  border-left: 3px solid var(--line);
+}
+.about-title {
+  margin: 0 0 8px; font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-soft); font-weight: 600; line-height: 1.4;
+}
+.about p { margin: 0 0 10px; font-size: 0.95rem; line-height: 1.6; color: var(--ink-soft); }
+.about p:last-child { margin-bottom: 0; }
+
 /* Intro lens cards */
 .lens-grid { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-bottom: 24px; }
 .lens-card {
