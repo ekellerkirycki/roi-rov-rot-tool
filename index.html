@@ -85,6 +85,8 @@
       <h2 id="h-results" tabindex="-1">Results</h2>
       <p class="lede" id="results-desc"></p>
 
+      <section class="panel interp" id="interpretation" aria-labelledby="h-interp"></section>
+
       <div class="panel">
         <h3 class="panel-title">The three lenses</h3>
         <div id="bars" class="bars"></div>
@@ -94,18 +96,19 @@
       <div class="panel">
         <h3 class="panel-title">Shape of the balance</h3>
         <div class="triangle-wrap" id="triangle"></div>
-        <p class="fine">The dashed outline is a perfectly balanced shape at my average score. The further the filled shape pulls away from it, the more one lens is being traded against the others.</p>
+        <p class="fine">The dashed outline is a perfectly balanced shape at the average score. The further the filled shape pulls away from it, the more one lens is being traded against the others.</p>
       </div>
 
-      <div class="panel">
-        <h3 class="panel-title">Where the lenses align and where they pull apart</h3>
-        <div id="tensions"></div>
-      </div>
+      <section class="panel" id="tension-panel" aria-labelledby="h-tension"></section>
+      <section class="panel" id="steps-panel" aria-labelledby="h-steps"></section>
+      <section class="panel" id="tests-panel" aria-labelledby="h-tests"></section>
+      <section class="panel" id="evidence-panel" aria-labelledby="h-evidence"></section>
+      <section class="panel move" id="move-panel" aria-labelledby="h-move"></section>
 
-      <div class="panel">
-        <h3 class="panel-title">My notes</h3>
+      <details class="panel notes-details" id="notes-details">
+        <summary>My answers and notes</summary>
         <div id="notes"></div>
-      </div>
+      </details>
 
       <div class="actions no-print">
         <button class="btn" type="button" data-action="back">Edit answers</button>
@@ -123,6 +126,7 @@
   </footer>
 
   <div class="sr-only" id="live" aria-live="polite" role="status"></div>
+  <script src="guidance.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

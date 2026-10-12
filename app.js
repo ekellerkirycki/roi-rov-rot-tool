@@ -47,23 +47,12 @@
 
   var RATING_WORDS = ['Not at all', 'Barely', 'Partly', 'Mostly', 'Clearly'];
   var MAX_SCORE = 20;      // 4 questions x 5 points
-  var TENSION_GAP = 6;     // 6 of 20 points, about 1.5 on the 1-5 scale
 
   var EVIDENCE = [
     { value: 'measured', label: 'Mostly measured' },
     { value: 'mixed', label: 'A mix' },
     { value: 'assumed', label: 'Mostly assumed' }
   ];
-
-  // Keyed "high-low": what it can mean when the first lens outscores the second.
-  var TENSION_TEXT = {
-    'roi-rov': 'The numbers moved, but the experience may not have kept pace. I should check whether the gains came from friction or pressure that users absorbed, and look for evidence of how it actually felt.',
-    'rov-roi': 'People seem to have felt the difference, but the business impact isn’t showing up. This may be a measurement gap, a mismatch in what I’m tracking, or value that takes longer to surface.',
-    'roi-rot': 'The results look strong, but the constraints were costly. I should ask whether these gains can last given the compliance, platform, or legacy limits I worked around.',
-    'rot-roi': 'The solution was feasible and well within constraints, but it didn’t move the metrics. I may have built what was possible rather than what was most valuable to the business.',
-    'rov-rot': 'The experience I wanted was clear, but technology limited how much of it shipped. I should document what was compromised and what it would take to close the gap.',
-    'rot-rov': 'The build went smoothly, but users may not feel the benefit. Feasibility may have shaped the design more than user needs did.'
-  };
 
   var STEPS = ['intro', 'setup', 'roi', 'rov', 'rot', 'results'];
   var PROGRESS = [
@@ -78,7 +67,7 @@
 
   var state;
   function freshState() {
-    state = { name: '', desc: '', current: 'intro', lenses: {} };
+    state = { name: '', desc: '', current: 'intro', lenses: {}, reflection: { confirm: '', challenge: '' } };
     LENSES.forEach(function (l) {
       state.lenses[l.id] = {
         evidence: '',
@@ -285,6 +274,8 @@
       }
       var ev = /^(roi|rov|rot)-evidence$/.exec(t.name);
       if (ev) state.lenses[ev[1]].evidence = t.value;
+    } else if (t.hasAttribute('data-reflect')) {
+      state.reflection[t.getAttribute('data-reflect')] = t.value;
     } else if (t.hasAttribute('data-note')) {
       var p = t.getAttribute('data-note').split(':');
       state.lenses[p[0]].answers[+p[1]].note = t.value;
@@ -295,12 +286,34 @@
 
   function renderResults() {
     $('#h-results').textContent = state.name;
-    $('#results-desc').textContent = state.desc || 'Here’s how the three lenses line up for this project.';
+    $('#results-desc').textContent = state.desc || 'Here\u2019s how the three lenses line up, and what they suggest doing next.';
+    var a = analyze();
+    renderInterpretation(a);
     renderBars();
     renderTriangle();
-    renderTensions();
+    renderTension(a);
+    renderSteps(a);
+    renderTests(a);
+    renderEvidencePrompts(a);
+    renderMove(a);
     renderNotes();
   }
+
+  function analyze() {
+    var scores = {}, evidence = {}, answers = {};
+    LENSES.forEach(function (l) {
+      scores[l.id] = score(l.id);
+      evidence[l.id] = state.lenses[l.id].evidence;
+      answers[l.id] = state.lenses[l.id].answers;
+    });
+    return Guidance.analyze({ scores: scores, evidence: evidence, answers: answers, lenses: LENSES });
+  }
+
+  function heading(id, text) { return el('h3', { id: id, 'class': 'panel-title', text: text }); }
+  function paragraphs(list, cls) {
+    return list.map(function (t) { return el('p', cls ? { 'class': cls, text: t } : { text: t }); });
+  }
+  function fill(host, children) { host.textContent = ''; appendAll(host, children); }
 
   function evidenceLabel(v) {
     var o = EVIDENCE.filter(function (e) { return e.value === v; })[0];
@@ -395,64 +408,110 @@
     host.appendChild(root);
   }
 
-  function renderTensions() {
-    var host = $('#tensions');
-    host.textContent = '';
-    var s = {};
-    LENSES.forEach(function (l) { s[l.id] = score(l.id); });
+  var SIZE_LABEL = { significant: 'Significant gap', modest: 'Modest gap', none: 'Aligned' };
 
-    var pairs = [['roi', 'rov'], ['roi', 'rot'], ['rov', 'rot']].map(function (p) {
-      var gap = Math.abs(s[p[0]] - s[p[1]]);
-      var hi = s[p[0]] >= s[p[1]] ? p[0] : p[1];
-      var lo = hi === p[0] ? p[1] : p[0];
-      return { a: p[0], b: p[1], gap: gap, hi: hi, lo: lo };
-    });
+  function renderInterpretation(a) {
+    fill($('#interpretation'), [
+      el('p', { 'class': 'eyebrow', text: 'Reading the pattern' }),
+      heading('h-interp', a.pattern.title)
+    ].concat(paragraphs(a.pattern.paragraphs), [
+      el('p', { 'class': 'fine', text: 'These scores reflect current beliefs and the evidence entered. They\u2019re a prompt for what to examine next, not a verdict.' })
+    ]));
+  }
 
-    var tense = pairs.filter(function (p) { return p.gap >= TENSION_GAP; })
-      .sort(function (x, y) { return y.gap - x.gap; });
-    var aligned = pairs.filter(function (p) { return p.gap < TENSION_GAP; });
+  function renderTension(a) {
+    var t = a.tension;
+    var card = el('div', { 'class': 'gap-card gap-' + t.size }, [
+      el('span', { 'class': 'chip', text: SIZE_LABEL[t.size] }),
+      el('p', { 'class': 'gap-headline', text: t.headline })
+    ]);
+    if (t.structure) card.appendChild(el('p', { 'class': 'gap-structure', text: t.structure }));
+    card.appendChild(el('p', { 'class': 'gap-why' }, [el('strong', { text: 'Why it matters. ' }), t.why]));
+    if (t.sizeNote) card.appendChild(el('p', { 'class': 'fine', text: t.sizeNote }));
 
-    function abbr(id) { return lensById(id).abbr; }
-
-    if (!tense.length) {
-      var avg = (s.roi + s.rov + s.rot) / 3;
-      var msg = avg >= 15
-        ? 'All three lenses agree and score high. I should capture what made that alignment possible so I can repeat it.'
-        : avg <= 10
-          ? 'The lenses agree, but all three are low. The project isn’t working on any front, which makes the decision to revisit or stop clearer.'
-          : 'The lenses agree at a moderate level. Nothing is being traded for something else, but there’s room to improve on all three.';
-      host.appendChild(el('div', { 'class': 'tension ok' }, [
-        el('h4', {}, [el('span', { 'class': 'tag', text: 'Aligned' }), 'No lens is pulling against another']),
-        el('p', { text: msg })
+    var list = el('ul', { 'class': 'pairs' });
+    t.pairs.forEach(function (p) {
+      list.appendChild(el('li', { 'class': 'pair pair-' + p.size }, [
+        el('span', { 'class': 'pair-names', text: lensById(p.a).abbr + ' and ' + lensById(p.b).abbr }),
+        el('span', { 'class': 'pair-gap', text: p.gap + (p.gap === 1 ? ' point' : ' points') + ' apart' }),
+        el('span', { 'class': 'pair-tag', text: SIZE_LABEL[p.size] })
       ]));
-    } else {
-      tense.forEach(function (p, i) {
-        host.appendChild(el('div', { 'class': 'tension flag' }, [
-          el('h4', {}, [
-            el('span', { 'class': 'tag', text: i === 0 ? 'Biggest tension' : 'Tension' }),
-            abbr(p.hi) + ' (' + s[p.hi] + ') vs. ' + abbr(p.lo) + ' (' + s[p.lo] + ')'
-          ]),
-          el('p', { text: TENSION_TEXT[p.hi + '-' + p.lo] })
-        ]));
-      });
-      aligned.forEach(function (p) {
-        host.appendChild(el('div', { 'class': 'tension ok' }, [
-          el('h4', {}, [el('span', { 'class': 'tag', text: 'Aligned' }), abbr(p.a) + ' and ' + abbr(p.b) + ' are within ' + p.gap + ' point' + (p.gap === 1 ? '' : 's')]),
-          el('p', { text: 'These two lenses are telling a similar story.' })
-        ]));
-      });
-    }
-
-    LENSES.forEach(function (l) {
-      if (state.lenses[l.id].evidence === 'assumed') {
-        host.appendChild(el('div', { 'class': 'tension' }, [
-          el('h4', {}, [el('span', { 'class': 'tag', text: 'Confidence' }), l.abbr + ' rests mostly on assumption']),
-          el('p', { text: 'I should treat my ' + l.abbr + ' score as a hypothesis to test, not a finding.' })
-        ]));
-      }
     });
 
-    host.appendChild(el('p', { 'class': 'fine', text: 'A tension is flagged when two lenses are ' + TENSION_GAP + ' or more points apart out of ' + MAX_SCORE + '.' }));
+    var kids = [heading('h-tension', 'Where the tension is'), card,
+      el('h4', { 'class': 'sub', text: 'Every pair, for comparison' }), list];
+    if (t.assumed.length) {
+      var names = t.assumed.map(function (id) { return lensById(id).abbr; }).join(' and ');
+      kids.push(el('p', { 'class': 'fine', text: names + (t.assumed.length > 1 ? ' rest' : ' rests') + ' mostly on assumption, so part of any gap may reflect missing information rather than a real difference.' }));
+    }
+    fill($('#tension-panel'), kids);
+  }
+
+  function renderSteps(a) {
+    var ol = el('ol', { 'class': 'steps' });
+    a.steps.forEach(function (st) {
+      var li = el('li', {}, [
+        el('strong', { 'class': 'step-title', text: st.title }),
+        el('p', { text: st.detail })
+      ]);
+      if (st.source) {
+        li.appendChild(el('p', { 'class': 'step-source' }, [
+          el('span', { 'class': 'chip small', text: 'From a low rating' }), ' ' + st.source
+        ]));
+        if (st.note) li.appendChild(el('p', { 'class': 'step-source' }, [el('em', { text: 'My note: ' + st.note })]));
+      }
+      ol.appendChild(li);
+    });
+    fill($('#steps-panel'), [
+      heading('h-steps', 'Suggested intervention steps'),
+      el('p', { 'class': 'panel-intro', text: 'Chosen from the shape of the scores, with the biggest gap weighted most. Treat them as the next best things to try, in roughly this order.' }),
+      ol
+    ]);
+  }
+
+  function renderTests(a) {
+    var ul = el('ul', { 'class': 'tests' });
+    a.tests.forEach(function (t) {
+      ul.appendChild(el('li', {}, [
+        el('p', { 'class': 'assumption' }, [el('span', { 'class': 'label', text: 'Assumption' }), t.assumption]),
+        el('p', { 'class': 'test' }, [el('span', { 'class': 'label', text: 'Test' }), t.test])
+      ]));
+    });
+    fill($('#tests-panel'), [
+      heading('h-tests', 'What to test next'),
+      el('p', { 'class': 'panel-intro', text: 'Each item is something the current scores quietly depend on, paired with a small way to check it.' }),
+      ul
+    ]);
+  }
+
+  function renderEvidencePrompts(a) {
+    function column(key, title, items, label) {
+      var ta = el('textarea', { id: 'reflect-' + key, rows: '3', maxlength: '600', 'data-reflect': key, placeholder: 'e.g., a specific number, a quote, a decision someone makes' });
+      ta.value = state.reflection[key];
+      return el('div', { 'class': 'evidence-col evidence-' + key }, [
+        el('h4', { 'class': 'sub', text: title }),
+        el('ul', {}, items.map(function (t) { return el('li', { text: t }); })),
+        el('label', { 'for': 'reflect-' + key, text: label }),
+        ta
+      ]);
+    }
+    fill($('#evidence-panel'), [
+      heading('h-evidence', 'What evidence would change my mind?'),
+      el('p', { 'class': 'panel-intro', text: 'The framework is for learning and decision-making, not for producing a definitive score. Deciding now what would strengthen or weaken this recommendation makes it easier to notice when the picture has changed.' }),
+      el('div', { 'class': 'evidence-grid' }, [
+        column('confirm', 'Would strengthen the case', a.evidence.confirm, 'What else would make me more confident?'),
+        column('challenge', 'Would challenge it', a.evidence.challenge, 'What would make me reconsider?')
+      ])
+    ]);
+  }
+
+  function renderMove(a) {
+    fill($('#move-panel'), [
+      el('p', { 'class': 'eyebrow', text: 'Recommended next move' }),
+      el('h3', { id: 'h-move', 'class': 'move-label', text: a.move.label })
+    ].concat(paragraphs(a.move.paragraphs), [
+      el('p', { 'class': 'fine', text: a.move.revisit })
+    ]));
   }
 
   function renderNotes() {
@@ -523,6 +582,8 @@
         showStep('intro', { fromHistory: true, silent: true });
       }
     });
+
+    window.addEventListener('beforeprint', function () { $('#notes-details').open = true; });
 
     history.replaceState({ step: 'intro' }, '');
     showStep('intro', { fromHistory: true, silent: true });
