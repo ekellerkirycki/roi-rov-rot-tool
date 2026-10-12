@@ -82,6 +82,8 @@ h3 { margin: 0 0 6px; font-size: 1.1rem; }
 }
 .about p { margin: 0 0 10px; font-size: 0.95rem; line-height: 1.6; color: var(--ink-soft); }
 .about p:last-child { margin-bottom: 0; }
+.about a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; font-weight: 500; }
+.about a:hover { text-decoration-thickness: 2px; }
 
 /* Intro lens cards */
 .lens-grid { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-bottom: 24px; }
