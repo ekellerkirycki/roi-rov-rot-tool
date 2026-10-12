@@ -275,6 +275,7 @@ textarea { resize: vertical; }
 /* Footer */
 .site-footer { border-top: 1px solid var(--line); padding: 20px 0 40px; color: var(--ink-soft); font-size: 0.88rem; }
 .site-footer p { margin: 0; }
+.site-footer .credit { color: var(--ink); font-weight: 600; margin-bottom: 4px; }
 
 /* Responsive */
 @media (max-width: 640px) {
@@ -297,7 +298,7 @@ textarea { resize: vertical; }
 /* Print: results only */
 @media print {
   body { background: #fff; font-size: 12pt; }
-  .skip, .progress, .site-footer, .no-print, #step-intro, #step-setup, #lens-steps { display: none !important; }
+  .skip, .progress, .site-footer p:not(.credit), .no-print, #step-intro, #step-setup, #lens-steps { display: none !important; }
   .site-header { border: 0; padding: 0 0 12px; }
   .panel, .gap-card, .tests li, .steps li { break-inside: avoid; }
   textarea { border: 1px solid #999; resize: none; }
